@@ -156,6 +156,19 @@ def wikilink_html(target: str, name_to_ticker: dict) -> str:
         return f'<a href="{href(f"ticker/{name_to_ticker[target]}.html")}" class="wl wl-ticker">{target}</a>'
     return f'<a href="{href(f"hub/{slugify(target)}.html")}" class="wl">{target}</a>'
 
+def _split_numbered_items(html: str) -> str:
+    """Insert <br> before (2), (3)... within paragraphs that contain (1).
+    Handles separators: ；; or no separator, matching patterns like
+    '(1) text；(2) text；(3) text' → line-broken items."""
+    def fix_para(m):
+        content = m.group(1)
+        if "(1)" not in content:
+            return m.group(0)
+        content = re.sub(r'\s*[；;]\s*\(([2-9]|1[0-9])\)\s*', r'<br>(\1) ', content)
+        return f"<p>{content}</p>"
+    return re.sub(r"<p>(.*?)</p>", fix_para, html, flags=re.DOTALL)
+
+
 def render_content(md_text: str, name_to_ticker: dict) -> str:
     """Markdown with [[wikilinks]] → HTML."""
     # Replace [[wikilinks]] with placeholder HTML-safe tags first
@@ -166,7 +179,8 @@ def render_content(md_text: str, name_to_ticker: dict) -> str:
     # Restore wikilinks
     def restore_wl(m):
         return wikilink_html(m.group(1), name_to_ticker)
-    return re.sub(r'§WL§([^§]+)§/WL§', restore_wl, html)
+    html = re.sub(r'§WL§([^§]+)§/WL§', restore_wl, html)
+    return _split_numbered_items(html)
 
 
 # ─── Data collection ──────────────────────────────────────────────────────────
