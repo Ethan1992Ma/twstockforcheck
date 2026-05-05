@@ -154,6 +154,7 @@ with st.sidebar:
             "🗺️ 重建主題頁",
             "🔍 品質檢查",
             "🔭 反向搜尋",
+            "🚀 發布到公開網站",
         ],
         label_visibility="collapsed",
     )
@@ -324,3 +325,105 @@ elif page == "🔭 反向搜尋":
             if sector_filter.strip():
                 cmd.extend(["--sectors", sector_filter.strip()])
             run_script(cmd)
+
+
+elif page == "🚀 發布到公開網站":
+    st.title("🚀 發布到公開網站")
+    st.markdown(
+        "將本機的所有變更（財報更新、主題頁、wikilink 索引等）推送到 GitHub，"
+        "GitHub Actions 會自動重新建置並發布到公開網站，約需 **2–3 分鐘**生效。"
+    )
+
+    # Show git status
+    st.subheader("目前變更")
+    try:
+        status_out = subprocess.check_output(
+            ["git", "status", "--short"],
+            cwd=PROJECT_ROOT, text=True, stderr=subprocess.STDOUT,
+        )
+        if status_out.strip():
+            st.code(status_out.strip(), language=None)
+        else:
+            st.success("✅ 沒有新的變更，已與遠端同步。")
+    except subprocess.CalledProcessError as e:
+        st.error(f"無法取得 git 狀態：{e.output}")
+
+    st.divider()
+
+    commit_msg = st.text_input(
+        "Commit 說明（可自訂，留空使用預設）",
+        placeholder="例：更新 2330 台積電財報、新增 CoWoS 主題",
+        key="publish_msg",
+    )
+
+    remote = st.selectbox(
+        "推送目標",
+        ["twstockforcheck (公開網站)", "origin (私有備份)"],
+        key="publish_remote",
+    )
+    remote_name = "twstockforcheck" if "twstockforcheck" in remote else "origin"
+
+    st.caption(f"推送分支：master → {remote_name}/master")
+
+    if st.button("🚀 發布", disabled=st.session_state.get("running", False), type="primary"):
+        import datetime
+        msg = commit_msg.strip() or f"資料更新 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        st.session_state["running"] = True
+        output_box = st.empty()
+        lines = []
+
+        def _log(text: str):
+            lines.append(text)
+            output_box.markdown(
+                '<div class="log-box">' + "\n".join(lines[-100:]) + "</div>",
+                unsafe_allow_html=True,
+            )
+
+        try:
+            # git add
+            _log("▶ git add ...")
+            subprocess.run(["git", "add", "-A"], cwd=PROJECT_ROOT, check=True,
+                           capture_output=True)
+            _log("  已加入暫存區")
+
+            # check if anything staged
+            diff = subprocess.run(
+                ["git", "diff", "--cached", "--quiet"],
+                cwd=PROJECT_ROOT,
+            )
+            if diff.returncode == 0:
+                _log("ℹ️  沒有需要 commit 的變更，直接嘗試 push...")
+            else:
+                # git commit
+                _log(f"▶ git commit -m \"{msg}\"")
+                subprocess.run(
+                    ["git", "commit", "-m", msg],
+                    cwd=PROJECT_ROOT, check=True, capture_output=True,
+                )
+                _log("  Commit 完成")
+
+            # git push
+            _log(f"▶ git push {remote_name} master")
+            proc = subprocess.Popen(
+                ["git", "push", remote_name, "master"],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, cwd=PROJECT_ROOT,
+            )
+            for line in proc.stdout:
+                _log("  " + line.rstrip())
+            proc.wait()
+
+            if proc.returncode == 0:
+                _log("")
+                _log("✅ 推送成功！GitHub Actions 正在重新建置，約 2–3 分鐘後網站更新。")
+                st.success("推送完成！前往 Actions 確認建置狀態：https://github.com/Ethan1992Ma/twstockforcheck/actions")
+                st.balloons()
+            else:
+                _log(f"❌ 推送失敗（exit {proc.returncode}）")
+                st.error("推送失敗，請確認網路連線與 GitHub 權限。")
+
+        except subprocess.CalledProcessError as e:
+            _log(f"❌ 錯誤：{e.stderr or e.stdout or str(e)}")
+            st.error("執行失敗，請查看上方輸出。")
+        finally:
+            st.session_state["running"] = False
