@@ -26,6 +26,107 @@ SITE_BASE    = os.environ.get("SITE_BASE", "")   # e.g. "/My-TW-Coverage"
 
 MD = markdown.Markdown(extensions=[TableExtension()], output_format="html")
 
+SECTOR_ZH = {
+    "Advertising Agencies":                  "廣告代理",
+    "Aerospace & Defense":                   "航太與國防",
+    "Agricultural Inputs":                   "農業原料",
+    "Airlines":                              "航空",
+    "Aluminum":                              "鋁業",
+    "Apparel Manufacturing":                 "服裝製造",
+    "Apparel Retail":                        "服裝零售",
+    "Asset Management":                      "資產管理",
+    "Auto & Truck Dealerships":              "汽車與卡車經銷",
+    "Auto Manufacturers":                    "汽車製造",
+    "Auto Parts":                            "汽車零件",
+    "Banks":                                 "銀行",
+    "Banks - Regional":                      "區域銀行",
+    "Beverages - Non-Alcoholic":             "非酒精飲料",
+    "Biotech - Therapeutics":                "生技治療",
+    "Biotechnology":                         "生物技術",
+    "Broadcasting":                          "廣播媒體",
+    "Building Materials":                    "建材",
+    "Building Products & Equipment":         "建築產品與設備",
+    "Business Equipment & Supplies":         "商業設備與耗材",
+    "Capital Markets":                       "資本市場",
+    "Chemicals":                             "化學品",
+    "Communication Equipment":               "通訊設備",
+    "Computer Hardware":                     "電腦硬體",
+    "Conglomerates":                         "多角化集團",
+    "Consulting Services":                   "顧問服務",
+    "Consumer Electronics":                  "消費電子",
+    "Copper":                                "銅業",
+    "Credit Services":                       "信貸服務",
+    "Department Stores":                     "百貨公司",
+    "Drug Manufacturers - Specialty & Generic": "學名藥與特殊藥品",
+    "Education & Training Services":         "教育與培訓服務",
+    "Electrical Equipment & Parts":          "電氣設備與零件",
+    "Electronic Components":                 "電子元件",
+    "Electronic Gaming & Multimedia":        "電子遊戲與多媒體",
+    "Electronics & Computer Distribution":   "電子與電腦通路",
+    "Engineering & Construction":            "工程與建設",
+    "Entertainment":                         "娛樂",
+    "Farm Products":                         "農產品",
+    "Financial Conglomerates":               "金融集團",
+    "Food Distribution":                     "食品流通",
+    "Footwear & Accessories":                "鞋類與配件",
+    "Furnishings, Fixtures & Appliances":    "家具燈具家電",
+    "Gambling":                              "博弈",
+    "Home Improvement Retail":               "居家改善零售",
+    "Household & Personal Products":         "家用與個人護理",
+    "Industrial Distribution":               "工業通路",
+    "Information Technology Services":       "資訊科技服務",
+    "Insurance - Diversified":               "多元化保險",
+    "Insurance - Life":                      "壽險",
+    "Insurance - Property & Casualty":       "產險",
+    "Insurance - Reinsurance":               "再保險",
+    "Insurance Brokers":                     "保險經紀",
+    "Integrated Freight & Logistics":        "整合貨運與物流",
+    "Internet Content & Information":        "網路內容與資訊",
+    "Internet Retail":                       "網路零售",
+    "Leisure":                               "休閒",
+    "Lodging":                               "住宿",
+    "Lumber & Wood Production":              "木材生產",
+    "Marine Shipping":                       "海運",
+    "Medical Devices":                       "醫療器材",
+    "Metal Fabrication":                     "金屬加工",
+    "Oil & Gas Equipment & Services":        "油氣設備與服務",
+    "Oil & Gas Refining & Marketing":        "油氣煉製與行銷",
+    "Other Industrial Metals & Mining":      "工業金屬與礦業",
+    "Packaged Foods":                        "包裝食品",
+    "Packaging & Containers":               "包裝與容器",
+    "Personal Services":                     "個人服務",
+    "Pollution & Treatment Controls":        "污染防治",
+    "Publishing":                            "出版",
+    "Railroads":                             "鐵路",
+    "Real Estate - Development":             "不動產開發",
+    "Real Estate - Diversified":             "多元化不動產",
+    "Real Estate Services":                  "不動產服務",
+    "Recreational Vehicles":                 "休閒車輛",
+    "Scientific & Technical Instruments":    "科學與技術儀器",
+    "Security & Protection Services":        "保全與防護服務",
+    "Semiconductor Equipment & Materials":   "半導體設備與材料",
+    "Semiconductors":                        "半導體",
+    "Software - Application":               "應用軟體",
+    "Software - Infrastructure":             "基礎設施軟體",
+    "Solar":                                 "太陽能",
+    "Specialty Business Services":           "特殊商業服務",
+    "Specialty Chemicals":                   "特殊化學品",
+    "Specialty Industrial Machinery":        "特殊工業機械",
+    "Specialty Retail":                      "特殊零售",
+    "Staffing & Employment Services":        "人力資源服務",
+    "Steel":                                 "鋼鐵",
+    "Telecom Services":                      "電信服務",
+    "Textile Manufacturing":                 "紡織製造",
+    "Thermal Coal":                          "煤炭",
+    "Tools & Accessories":                   "工具與配件",
+    "Trucking":                              "貨運",
+    "Utilities - Regulated Electric":        "電力公用事業",
+    "Utilities - Regulated Gas":             "天然氣公用事業",
+    "Utilities - Regulated Water":           "水務公用事業",
+    "Utilities - Renewable":                 "再生能源",
+    "Waste Management":                      "廢棄物管理",
+}
+
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -36,6 +137,9 @@ def ticker_url(t_id: str) -> str:  return href("ticker/" + t_id + ".html")
 def hub_url(wl: str) -> str:       return href("hub/" + slugify(wl) + ".html")
 def theme_url(slug: str) -> str:   return href("theme/" + slug + ".html")
 def sector_url(s: str) -> str:     return href("sector/" + slugify(s) + ".html")
+
+def sector_zh(s: str) -> str:
+    return SECTOR_ZH.get(s, s)
 
 def slugify(text: str) -> str:
     return re.sub(r'[^\w一-鿿㐀-䷿＀-￯]+', '-', text).strip('-')
@@ -248,7 +352,7 @@ def _badge(text: str, cls: str = "badge") -> str:
 
 # ─── Page generators ──────────────────────────────────────────────────────────
 
-def gen_homepage(tickers: list, themes: list) -> str:
+def gen_homepage(tickers: list, themes: list, by_sector: dict) -> str:
     n_tickers = len(tickers)
     n_sectors = len(set(t["sector"] for t in tickers))
 
@@ -258,6 +362,18 @@ def gen_homepage(tickers: list, themes: list) -> str:
         + ('<small>' + t["description"] + '</small>' if t["description"] else '')
         + '</a>'
         for t in themes[:12]
+    )
+
+    # Sector heatmap — top 24 by company count
+    sorted_sectors = sorted(by_sector.items(), key=lambda x: -len(x[1]))[:24]
+    max_count = max(len(ts) for _, ts in sorted_sectors) if sorted_sectors else 1
+    heat_cells = "".join(
+        '<a class="heat-cell" href="' + sector_url(s) + '"'
+        ' style="--heat:' + f"{len(ts)/max_count:.2f}" + '">'
+        '<strong>' + sector_zh(s) + '</strong>'
+        '<em>' + str(len(ts)) + ' 家</em>'
+        '</a>'
+        for s, ts in sorted_sectors
     )
 
     return f"""{_head("Taiwan Stock Coverage")}
@@ -280,6 +396,13 @@ def gen_homepage(tickers: list, themes: list) -> str:
         <a href="{href('hub/NVIDIA.html')}">NVIDIA</a>
       </div>
     </div>
+  </section>
+
+  <section class="container home-section">
+    <h2>板塊熱度</h2>
+    <p class="heat-legend">顏色越深代表覆蓋公司數越多，點擊進入各產業列表。</p>
+    <div class="sector-heat-grid sector-heat-grid--home">{heat_cells}</div>
+    <a class="see-all" href="{href('sectors.html')}">查看全部 {n_sectors} 個產業 →</a>
   </section>
 
   <section class="container home-section">
@@ -323,6 +446,7 @@ def gen_hub_page(wl: str, wl_tickers: list, related: list) -> str:
 
     sectors_html = ""
     for sector, st in sorted(by_sector.items(), key=lambda x: -len(x[1])):
+        zh = sector_zh(sector)
         chips = "".join(
             '<a class="ticker-chip" href="' + ticker_url(t["ticker"]) + '">'
             '<span class="chip-code">' + t["ticker"] + '</span>' + t["name"] + '</a>'
@@ -330,7 +454,8 @@ def gen_hub_page(wl: str, wl_tickers: list, related: list) -> str:
         )
         sectors_html += (
             f'<div class="hub-sector">'
-            f'<h3>{sector} <span class="count-badge">{len(st)}</span></h3>'
+            f'<h3>{zh} <span class="sector-en">{sector}</span>'
+            f' <span class="count-badge">{len(st)}</span></h3>'
             f'<div class="chip-grid">{chips}</div></div>'
         )
 
@@ -415,6 +540,7 @@ def gen_theme_page(theme: dict, name_to_ticker: dict) -> str:
 
 
 def gen_sector_page(sector: str, tickers: list) -> str:
+    zh = sector_zh(sector)
     rows = "".join(
         '<a class="sector-row" href="' + ticker_url(t["ticker"]) + '">'
         '<span class="sr-code">' + t["ticker"] + '</span>'
@@ -424,26 +550,37 @@ def gen_sector_page(sector: str, tickers: list) -> str:
         '</a>'
         for t in sorted(tickers, key=lambda x: x["ticker"])
     )
-    return f"""{_head(sector)}
+    title_html = (
+        f'<h1>{zh} <span class="sector-en">{sector}</span>'
+        f' <span class="count-badge">{len(tickers)}</span></h1>'
+    )
+    return f"""{_head(zh + " — " + sector)}
 {_nav()}
 <main class="container">
-  <h1>{sector} <span class="count-badge">{len(tickers)}</span></h1>
+  {title_html}
   <div class="sector-list">{rows}</div>
 </main>
 {_foot()}"""
 
 
 def gen_sectors_index(by_sector: dict) -> str:
-    cards = "".join(
-        '<a class="sector-card" href="' + sector_url(s) + '">'
-        '<strong>' + s + '</strong><span>' + str(len(ts)) + ' 家</span></a>'
-        for s, ts in sorted(by_sector.items(), key=lambda x: -len(x[1]))
+    sorted_sectors = sorted(by_sector.items(), key=lambda x: -len(x[1]))
+    max_count = max(len(ts) for ts in by_sector.values()) if by_sector else 1
+    cells = "".join(
+        '<a class="heat-cell" href="' + sector_url(s) + '"'
+        ' style="--heat:' + f"{len(ts)/max_count:.2f}" + '">'
+        '<strong>' + sector_zh(s) + '</strong>'
+        '<span>' + s + '</span>'
+        '<em>' + str(len(ts)) + ' 家</em>'
+        '</a>'
+        for s, ts in sorted_sectors
     )
-    return f"""{_head("產業一覽")}
+    return f"""{_head("產業熱度")}
 {_nav()}
 <main class="container">
-  <h1>產業一覽 <span class="count-badge">{len(by_sector)}</span></h1>
-  <div class="sector-grid">{cards}</div>
+  <h1>產業熱度 <span class="count-badge">{len(by_sector)}</span></h1>
+  <p class="heat-legend">顏色深淺代表覆蓋公司數量，顏色越深代表公司數越多。</p>
+  <div class="sector-heat-grid">{cells}</div>
 </main>
 {_foot()}"""
 
@@ -543,7 +680,7 @@ def main():
 
     # Homepage
     print("🏠 Homepage...", end=" ", flush=True)
-    (DOCS_DIR / "index.html").write_text(gen_homepage(tickers, themes), encoding="utf-8")
+    (DOCS_DIR / "index.html").write_text(gen_homepage(tickers, themes, by_sector), encoding="utf-8")
     print("done")
 
     # Search index
