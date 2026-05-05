@@ -1,0 +1,49 @@
+name: Build & Deploy Site
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build site
+        env:
+          # Set this in repo Settings > Variables > SITE_BASE if your site lives at
+          # https://username.github.io/My-TW-Coverage  →  SITE_BASE=/My-TW-Coverage
+          # Leave empty if you have a custom domain at root.
+          SITE_BASE: ${{ vars.SITE_BASE }}
+        run: python scripts/build_site.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
