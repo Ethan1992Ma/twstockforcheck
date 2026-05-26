@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import ast; ast.parse\\(open\\('admin.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(open \"/Users/qqqq/My-TW-Coverage/TW Coverage Admin.app\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8501)",
+      "Bash(python -c \"from PIL import Image, ImageDraw, ImageFont; print\\('Pillow OK'\\)\")",
+      "Bash(python -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(python3)",
+      "Bash(killall Finder)",
+      "Bash(open \"/Users/qqqq/My-TW-Coverage/\")"
+    ]
+  }
+}

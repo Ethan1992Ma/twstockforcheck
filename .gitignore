@@ -11,3 +11,4 @@ enrichment*.json
 .claude/settings.local.json
 .gstack/
 docs/
+*.app/
