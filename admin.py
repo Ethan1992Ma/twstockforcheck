@@ -79,10 +79,17 @@ st.markdown("""
 
 
 def run_script(cmd: list) -> None:
-    """Stream subprocess output to a Streamlit placeholder."""
+    """Stream subprocess output with clear status indicators."""
+    import time, re as _re
     st.session_state["running"] = True
-    output_box = st.empty()
-    lines = []
+
+    status_box  = st.empty()   # spinning indicator
+    summary_box = st.empty()   # final result card
+    log_box     = st.empty()   # scrollable log
+    lines       = []
+    start       = time.time()
+
+    status_box.info("⏳ 執行中…")
 
     try:
         proc = subprocess.Popen(
@@ -93,16 +100,31 @@ def run_script(cmd: list) -> None:
             cwd=PROJECT_ROOT,
         )
         for line in proc.stdout:
-            lines.append(line.rstrip())
-            output_box.markdown(
-                f'<div class="log-box">' + "\n".join(lines[-200:]) + "</div>",
+            stripped = line.rstrip()
+            lines.append(stripped)
+            log_box.markdown(
+                '<div class="log-box">' + "\n".join(lines[-200:]) + "</div>",
                 unsafe_allow_html=True,
             )
         proc.wait()
-        status = "✅ 完成" if proc.returncode == 0 else f"❌ 錯誤 (exit {proc.returncode})"
-        st.info(status)
+        elapsed = time.time() - start
+
+        # Parse "Done. Updated: X | Skipped: Y | Failed: Z" if present
+        summary_line = next((l for l in reversed(lines) if l.startswith("Done.")), None)
+        if proc.returncode == 0:
+            status_box.success(f"✅ 完成（耗時 {elapsed:.0f} 秒）")
+            if summary_line:
+                m = _re.findall(r'(\w+):\s*(\d+)', summary_line)
+                if m:
+                    cols = summary_box.columns(len(m))
+                    labels = {"Updated": "✅ 已更新", "Skipped": "⏭️ 略過", "Failed": "❌ 失敗"}
+                    for col, (key, val) in zip(cols, m):
+                        col.metric(labels.get(key, key), val)
+        else:
+            status_box.error(f"❌ 錯誤（exit {proc.returncode}，耗時 {elapsed:.0f} 秒）")
+
     except Exception as e:
-        st.error(f"執行失敗：{e}")
+        status_box.error(f"執行失敗：{e}")
     finally:
         st.session_state["running"] = False
 
@@ -209,6 +231,15 @@ elif page == "💰 更新財報":
     st.title("💰 更新財報")
     st.markdown("從 yfinance 抓取最新的年度（3年）及季度（4Q）財務數據，更新 `## 財務概況` 區塊。業務描述與供應鏈**不受影響**。")
 
+    # Show most recently updated file
+    import glob as _glob
+    md_files = _glob.glob(os.path.join(PROJECT_ROOT, "Pilot_Reports", "**", "*.md"), recursive=True)
+    if md_files:
+        latest = max(md_files, key=os.path.getmtime)
+        mtime = os.path.getmtime(latest)
+        import datetime as _dt
+        st.caption(f"最近一次更新：{os.path.basename(latest)} — {_dt.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')}")
+
     args = scope_picker("financials")
     dry_run = st.checkbox("Dry Run（預覽不寫入）", key="financials_dry")
 
@@ -223,6 +254,13 @@ elif page == "💰 更新財報":
 elif page == "📈 更新估值":
     st.title("📈 更新估值")
     st.markdown("只更新 P/E、Forward P/E、P/S、P/B、EV/EBITDA 及股價。比完整財報快 3x。")
+
+    import glob as _glob, datetime as _dt
+    md_files = _glob.glob(os.path.join(PROJECT_ROOT, "Pilot_Reports", "**", "*.md"), recursive=True)
+    if md_files:
+        latest = max(md_files, key=os.path.getmtime)
+        mtime = os.path.getmtime(latest)
+        st.caption(f"最近一次更新：{os.path.basename(latest)} — {_dt.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')}")
 
     args = scope_picker("valuation")
     dry_run = st.checkbox("Dry Run（預覽不寫入）", key="valuation_dry")
